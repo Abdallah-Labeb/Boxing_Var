@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI BOXING ANALYZER | PRO VER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-red: #ff003c;
+            --neon-green: #00ff9d;
+            --dark-bg: #050505;
+            --panel-bg: rgba(10, 15, 20, 0.85);
+            --border: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            /* خلفية شبكية متحركة */
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--neon-blue);
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            background: rgba(0,0,0,0.8);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            font-size: 12px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+        }
+
+        /* Main Layout */
+        .main-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 350px 1fr 300px; /* Sidebar - Video - Stats */
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 70px);
+        }
+
+        /* Panels Common Style */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.15);
+            backdrop-filter: blur(10px);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* زوايا الـ HUD */
+        .panel::before {
+            content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px;
+            border-top: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue);
+        }
+        .panel::after {
+            content: ''; position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px;
+            border-bottom: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue);
+        }
+
+        h2 {
+            font-family: 'Orbitron';
+            color: white;
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        /* Left Panel: Controls */
+        .controls-panel { padding: 25px; }
+
+        .upload-btn {
+            width: 100%;
+            padding: 40px;
+            border: 2px dashed rgba(0, 243, 255, 0.3);
+            background: rgba(0, 243, 255, 0.02);
+            color: #aaa;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .upload-btn:hover {
+            background: rgba(0, 243, 255, 0.05);
+            border-color: var(--neon-blue);
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        .cyber-btn {
+            width: 100%;
+            background: var(--neon-blue);
+            color: black;
+            font-family: 'Orbitron';
+            font-weight: bold;
+            border: none;
+            padding: 15px;
+            cursor: pointer;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        .cyber-btn:hover {
+            background: white;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+        .cyber-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .console-log {
+            flex: 1;
+            background: black;
+            border: 1px solid #333;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: var(--neon-green);
+            overflow-y: auto;
+            opacity: 0.7;
+        }
+
+        /* Middle Panel: Video */
+        .video-panel {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: black;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+            border: 1px solid #222;
+        }
+
+        /* Scanning Effect */
+        .scanner-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            animation: scan 2s linear infinite;
+            display: none;
+            z-index: 10;
+        }
+        @keyframes scan { 0% {top: 0;} 100% {top: 100%;} }
+
+        .overlay-grid {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 100px 100px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.5;
+        }
+
+        /* Right Panel: Stats */
+        .stats-panel { padding: 25px; }
+
+        .stat-card {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stat-value-big {
+            font-family: 'Orbitron';
+            font-size: 28px;
+            color: white;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* Circular Gauge */
+        .gauge-wrapper {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 10px auto;
+            position: relative;
+        }
+        .circle-bg {
+            fill: none;
+            stroke: #1a1a1a;
+            stroke-width: 10;
+        }
+        .circle-progress {
+            fill: none;
+            stroke: var(--neon-blue);
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 283; /* 2 * PI * 45 */
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 1s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .gauge-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron';
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* Result Colors */
+        .hit-land { color: var(--neon-green) !important; text-shadow: 0 0 15px var(--neon-green); }
+        .hit-miss { color: var(--neon-red) !important; text-shadow: 0 0 15px var(--neon-red); }
+        .stroke-land { stroke: var(--neon-green) !important; }
+        .stroke-miss { stroke: var(--neon-red) !important; }
+
+        /* Mobile Responsive */
+        @media (max-width: 1000px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow-y: auto;
+            }
+            body { overflow: auto; height: auto; }
+            .video-panel { height: 400px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">BOXING<span style="color:white">AI</span></div>
+        <div class="status-badge">SYSTEM ONLINE</div>
+    </header>
+
+    <div class="main-container">
+        
+        <div class="panel controls-panel">
+            <h2>INPUT DATA</h2>
+            
+            <input type="file" id="videoInput" accept="video/*" hidden>
+            <label for="videoInput" class="upload-btn" id="dropZone">
+                <div style="font-size: 2rem; margin-bottom: 10px;">📂</div>
+                LOAD FOOTAGE
+            </label>
+
+            <button class="cyber-btn" id="analyzeBtn" onclick="analyzeVideo()">INITIATE ANALYSIS</button>
+            <button class="cyber-btn" style="background: transparent; border: 1px solid #444; color: white;" onclick="toggleSlowMo()">TOGGLE SLOW-MO</button>
+
+            <h2 style="margin-top: 20px; font-size: 12px; border:none;">SYSTEM LOGS</h2>
+            <div class="console-log" id="consoleLog">
+                > System initialized...<br>
+                > Waiting for input...
+            </div>
+        </div>
+
+        <div class="panel video-panel">
+            <div class="overlay-grid"></div>
+            <div class="scanner-line" id="scanner"></div>
+            <video id="videoPreview" controls playsinline></video>
+        </div>
+
+        <div class="panel stats-panel">
+            <h2>DIAGNOSTICS</h2>
+            
+            <div class="stat-card">
+                <span class="stat-label">DETECTED ACTION</span>
+                <div class="stat-value-big" id="punchType">--</div>
+                
+                <div class="gauge-wrapper">
+                    <svg width="120" height="120">
+                        <circle class="circle-bg" cx="60" cy="60" r="45"></circle>
+                        <circle class="circle-progress" id="punchCircle" cx="60" cy="60" r="45"></circle>
+                    </svg>
+                    <div class="gauge-text" id="punchConfText">0%</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">IMPACT STATUS</span>
+                <div class="stat-value-big" id="hitResult">--</div>
+
+                <div class="gauge-wrapper">
+                    <svg width="120" height="120">
+                        <circle class="circle-bg" cx="60" cy="60" r="45"></circle>
+                        <circle class="circle-progress" id="hitCircle" cx="60" cy="60" r="45"></circle>
+                    </svg>
+                    <div class="gauge-text" id="hitConfText">0%</div>
+                </div>
+            </div>
+
+            <div style="margin-top: auto; font-size: 12px; color: #666; text-align: center;">
+                AI MODEL V 2.1 <br> LATENCY: 24ms
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('videoInput');
+        const videoPreview = document.getElementById('videoPreview');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const scanner = document.getElementById('scanner');
+        const consoleLog = document.getElementById('consoleLog');
+        
+        let selectedFile = null;
+        let isSlowMo = false;
+
+        // Logging Function
+        function log(msg) {
+            const time = new Date().toLocaleTimeString('en-US', {hour12: false});
+            consoleLog.innerHTML += `> [${time}] ${msg}<br>`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        // File Selection
+        fileInput.addEventListener('change', function(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const fileURL = URL.createObjectURL(selectedFile);
+                videoPreview.src = fileURL;
+                log(`File loaded: ${selectedFile.name}`);
+                videoPreview.play();
+                videoPreview.muted = true;
+            }
+        });
+
+        // Slow Motion
+        function toggleSlowMo() {
+            if(!videoPreview.src) return;
+            isSlowMo = !isSlowMo;
+            videoPreview.playbackRate = isSlowMo ? 0.5 : 1.0;
+            log(`Playback rate set to: ${isSlowMo ? '0.5x' : '1.0x'}`);
+        }
+
+        // Gauge Animation
+        function setGauge(circleId, textId, percentage, colorClass = '') {
+            const circle = document.getElementById(circleId);
+            const text = document.getElementById(textId);
+            
+            // محيط الدائرة = 2 * PI * 45 ≈ 283
+            const radius = 45;
+            const circumference = 2 * Math.PI * radius;
+            
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            text.innerText = percentage + '%';
+
+            // Reset classes
+            circle.classList.remove('stroke-land', 'stroke-miss');
+            if(colorClass) circle.classList.add(colorClass);
+        }
+
+        // Analyze Function
+        async function analyzeVideo() {
+            if (!selectedFile) {
+                alert("Please load footage first.");
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerText = "PROCESSING...";
+            scanner.style.display = 'block'; // تشغيل الليزر
+            log("Connecting to Neural Core...");
+            log("Uploading batch frames...");
+
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+
+            try {
+                // Fetch logic
+                const response = await fetch('http://127.0.0.1:8000/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    log(`ERROR: ${data.error}`);
+                    alert(data.error);
+                } else {
+                    log("Analysis Complete.");
+                    log(`Result: ${data.punch_type} | ${data.hit_result}`);
+                    
+                    // تحديث النتائج
+                    document.getElementById('punchType').innerText = data.punch_type;
+                    document.getElementById('hitResult').innerText = data.hit_result;
+
+                    // تحديث الألوان بناء على النتيجة
+                    const hitResElem = document.getElementById('hitResult');
+                    let colorClass = '';
+
+                    if(data.hit_result === 'Land') {
+                        hitResElem.className = 'stat-value-big hit-land';
+                        colorClass = 'stroke-land';
+                        videoPreview.style.border = "2px solid var(--neon-green)";
+                    } else {
+                        hitResElem.className = 'stat-value-big hit-miss';
+                        colorClass = 'stroke-miss';
+                        videoPreview.style.border = "2px solid var(--neon-red)";
+                    }
+
+                    // تشغيل العدادات
+                    const punchVal = parseFloat(data.punch_confidence);
+                    const hitVal = parseFloat(data.hit_confidence);
+                    
+                    setGauge('punchCircle', 'punchConfText', Math.round(punchVal));
+                    setGauge('hitCircle', 'hitConfText', Math.round(hitVal), colorClass);
+                }
+
+            } catch (error) {
+                console.error(error);
+                log("CRITICAL FAILURE: Connection Refused.");
+                alert("Server not found. Check Python Console.");
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerText = "INITIATE ANALYSIS";
+                scanner.style.display = 'none'; // إيقاف الليزر
+            }
+        }
+    </script>
+</body>
+</html>

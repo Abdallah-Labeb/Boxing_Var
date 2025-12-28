@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+
+# PyTorch Models (كبيرة جداً - يمكن تتبعها بـ Git LFS إذا أردت)
+# *.pth
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+temp_*
+*.tmp
+
+# Uploads
+backend/uploads/*
+backend/models/uploads/*
+!backend/uploads/.gitkeep
+!backend/models/uploads/.gitkeep
